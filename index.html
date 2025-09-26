@@ -1,49 +1,82 @@
-<!doctype html>
-<html lang="en">
+<!DOCTYPE html>
+<html>
 <head>
-  <meta charset="utf-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1"/>
-
+  <meta charset="utf-8" />
   <title>Accra Flood Risk Map – Demo</title>
-  <meta name="description" content="Interactive map demo built with Leaflet and GeoJSON."/>
-
-  <!-- Open Graph for social previews -->
-  <meta property="og:type" content="website"/>
-  <meta property="og:title" content="Map Demo – Template"/>
-  <meta property="og:description" content="Interactive demo map"/>
-  <meta property="og:url" content="__PAGES_URL__"/>
-  <meta property="og:image" content="__PAGES_URL__/preview.png"/>
-  <meta property="og:image:width" content="1200"/>
-  <meta property="og:image:height" content="630"/>
-
-  <!-- Leaflet CSS -->
-  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
   <style>
-    html, body, #map { height: 100%; margin: 0; }
+    #map { height: 100vh; margin: 0; }
   </style>
 </head>
 <body>
   <div id="map"></div>
 
-  <!-- Leaflet JS -->
   <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
   <script>
-    // Init map
-    const map = L.map('map').setView([7.9, -1.0], 7);
+    // Initialize the map centered on Accra
+    const map = L.map('map').setView([5.56, -0.20], 12);
 
+    // Add OpenStreetMap basemap
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       maxZoom: 19,
-      attribution: '&copy; OpenStreetMap'
+      attribution: '&copy; OpenStreetMap contributors'
     }).addTo(map);
 
-    // Load demo GeoJSON
-    fetch('data/demo_data.geojson')
+    // Function to color polygons by risk level
+    const riskColor = r =>
+      r === 'High' ? '#d62828' :    // red
+      r === 'Medium' ? '#f77f00' :  // orange
+      r === 'Low' ? '#fcbf49' :     // yellow
+      '#6c757d';                    // gray fallback
+
+    // Load flood risk polygons
+    fetch('data/flood_risk_zones.geojson')
       .then(r => r.json())
-      .then(data => {
-        L.geoJSON(data, {
-          onEachFeature: (f, l) => l.bindPopup("Feature: " + JSON.stringify(f.properties))
+      .then(geo => {
+        // Add polygons
+        const flood = L.geoJSON(geo, {
+          style: f => ({
+            color: riskColor(f.properties.risk),
+            weight: 1,
+            fillColor: riskColor(f.properties.risk),
+            fillOpacity: 0.25
+          }),
+          onEachFeature: (f, l) => {
+            const { name = 'Area', risk = 'Unknown' } = f.properties || {};
+            l.bindPopup(`<b>${name}</b><br>Flood Risk: <b>${risk}</b>`);
+          }
         }).addTo(map);
+
+        // Zoom to fit polygons
+        try { map.fitBounds(flood.getBounds(), { padding: [20,20] }); } catch(e) {}
+
+        // Add legend
+        const legend = L.control({position:'bottomright'});
+        legend.onAdd = () => {
+          const div = L.DomUtil.create('div');
+          div.style.cssText = 'background:rgba(255,255,255,.95);padding:8px 10px;border-radius:6px;box-shadow:0 2px 8px rgba(0,0,0,.15);font:12px system-ui;';
+          div.innerHTML = `
+            <b>Flood Risk</b>
+            <div style="margin-top:6px">
+              <div style="display:flex;align-items:center;gap:6px;margin:2px 0">
+                <span style="width:12px;height:12px;background:#d62828;border:1px solid #999;display:inline-block"></span> High
+              </div>
+              <div style="display:flex;align-items:center;gap:6px;margin:2px 0">
+                <span style="width:12px;height:12px;background:#f77f00;border:1px solid #999;display:inline-block"></span> Medium
+              </div>
+              <div style="display:flex;align-items:center;gap:6px;margin:2px 0">
+                <span style="width:12px;height:12px;background:#fcbf49;border:1px solid #999;display:inline-block"></span> Low
+              </div>
+            </div>`;
+          return div;
+        };
+        legend.addTo(map);
+      })
+      .catch(err => {
+        console.error('Could not load flood_risk_zones.geojson', err);
+        alert('Flood data missing or invalid. Make sure it exists in /data/flood_risk_zones.geojson');
       });
   </script>
 </body>
 </html>
+
