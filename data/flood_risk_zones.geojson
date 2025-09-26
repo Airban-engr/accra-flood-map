@@ -1,0 +1,41 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": { "name": "Odaw Basin (Demo)", "risk": "High" },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[
+          [-0.245, 5.635], [-0.210, 5.635],
+          [-0.210, 5.675], [-0.245, 5.675],
+          [-0.245, 5.635]
+        ]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "name": "Korle Lagoon Fringe (Demo)", "risk": "Medium" },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[
+          [-0.235, 5.545], [-0.195, 5.545],
+          [-0.195, 5.585], [-0.235, 5.585],
+          [-0.235, 5.545]
+        ]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "name": "Coastal Lowlands East (Demo)", "risk": "Low" },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[
+          [-0.120, 5.565], [-0.070, 5.565],
+          [-0.070, 5.605], [-0.120, 5.605],
+          [-0.120, 5.565]
+        ]]
+      }
+    }
+  ]
+}
