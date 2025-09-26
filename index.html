@@ -1,66 +1,73 @@
 <!DOCTYPE html>
-<html>
-  <!-- deploy bump -->
+<html lang="en">
 <head>
-  <!-- Open Graph tags for social previews -->
-<meta property="og:title" content="Accra Flood Risk Map – Demo">
-<meta property="og:description" content="An interactive map showing flood-prone zones across Accra, with risk levels (High, Medium, Low).">
-<meta property="og:type" content="website">
-<meta property="og:url" content="https://airban-engr.github.io/accra-flood-map/">
-<meta property="og:image" content="https://airban-engr.github.io/accra-flood-map/preview.png">
-<meta property="og:image:width" content="1200">
-<meta property="og:image:height" content="630">
+  <meta charset="utf-8" />
+  <title>Accra Flood Risk Map – Demo</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
 
-<!-- Twitter Card tags -->
-<meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="Accra Flood Risk Map – Demo">
-<meta name="twitter:description" content="Interactive flood risk zones for Accra with risk-level styling and map popups.">
-<meta name="twitter:image" content="https://airban-engr.github.io/accra-flood-map/preview.png">
+  <!-- (Optional) Add your OG/Twitter tags here -->
+  <!--
+  <meta property="og:title" content="Accra Flood Risk Map – Demo">
+  <meta property="og:description" content="An interactive map showing flood-prone zones across Accra, with risk levels (High, Medium, Low).">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://airban-engr.github.io/accra-flood-map/">
+  <meta property="og:image" content="https://airban-engr.github.io/accra-flood-map/preview.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Accra Flood Risk Map – Demo">
+  <meta name="twitter:description" content="Interactive flood risk zones for Accra with risk-level styling and map popups.">
+  <meta name="twitter:image" content="https://airban-engr.github.io/accra-flood-map/preview.png">
+  -->
 
+  <!-- Leaflet CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+  <style>
+    html, body { height: 100%; margin: 0; }
+    #map { height: 100%; }
+  </style>
 </head>
 <body>
   <div id="map"></div>
 
+  <!-- Leaflet JS (must be after the map div) -->
   <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
   <script>
-    // Initialize the map centered on Accra
+    // Init map (Accra)
     const map = L.map('map').setView([5.56, -0.20], 12);
 
-    // Add OpenStreetMap basemap
+    // Basemap
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       maxZoom: 19,
       attribution: '&copy; OpenStreetMap contributors'
     }).addTo(map);
 
-    // Function to color polygons by risk level
+    // Color ramp
     const riskColor = r =>
-      r === 'High' ? '#d62828' :    // red
-      r === 'Medium' ? '#f77f00' :  // orange
-      r === 'Low' ? '#fcbf49' :     // yellow
-      '#6c757d';                    // gray fallback
+      r === 'High' ? '#d62828' :
+      r === 'Medium' ? '#f77f00' :
+      r === 'Low' ? '#fcbf49' : '#6c757d';
 
-    // Load flood risk polygons
+    // Load polygons (file exists because you can open it directly)
     fetch('data/flood_risk_zones.geojson')
       .then(r => r.json())
       .then(geo => {
-        // Add polygons
         const flood = L.geoJSON(geo, {
           style: f => ({
-            color: riskColor(f.properties.risk),
+            color: riskColor(f.properties?.risk),
             weight: 1,
-            fillColor: riskColor(f.properties.risk),
+            fillColor: riskColor(f.properties?.risk),
             fillOpacity: 0.25
           }),
           onEachFeature: (f, l) => {
-            const { name = 'Area', risk = 'Unknown' } = f.properties || {};
+            const name = f.properties?.name || 'Area';
+            const risk = f.properties?.risk || 'Unknown';
             l.bindPopup(`<b>${name}</b><br>Flood Risk: <b>${risk}</b>`);
           }
         }).addTo(map);
 
-        // Zoom to fit polygons
-        try { map.fitBounds(flood.getBounds(), { padding: [20,20] }); } catch(e) {}
-
-        // Add legend
+        try { map.fitBounds(flood.getBounds(), { padding: [20,20] }); } catch (e) {}
+        // Legend
         const legend = L.control({position:'bottomright'});
         legend.onAdd = () => {
           const div = L.DomUtil.create('div');
@@ -83,10 +90,9 @@
         legend.addTo(map);
       })
       .catch(err => {
-        console.error('Could not load flood_risk_zones.geojson', err);
-        alert('Flood data missing or invalid. Make sure it exists in /data/flood_risk_zones.geojson');
+        console.error('Failed to load data/flood_risk_zones.geojson', err);
+        alert('Flood data missing or invalid at /data/flood_risk_zones.geojson');
       });
   </script>
 </body>
 </html>
-
